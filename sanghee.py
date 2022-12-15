@@ -6,6 +6,7 @@ answer = random.randint(1, 100)  # 정답을 1에서 100 사이의 난수로 설
 count = 0  # 시도 횟수
 count_count = 10  # 제한 모드 남은 기회
 timer = 20  # 시간 모드 타이머
+clock_win = 0  # 시간 모드 정답 맞췄을때 1
 
 
 class Ui_MainWindow(object):
@@ -103,13 +104,19 @@ class Ui_MainWindow(object):
 
     def timerTimeout(self):
         global timer
+        global clock_win
+
+        if clock_win == 1:
+            self.myTimer.stop()
+
         timer -= 1
-        if timer >= 0:
-            self.update_gui()
-        else:
+
+        if timer == 0:
+            self.myTimer.stop()
             self.clockSpeak.setText(
                 "숫자를 맞추지 못했습니다. \n재도전하고 싶으면\n'다시' 버튼을 눌러주세요")
-            # self.mytimer.stop()
+
+        self.update_gui()
 
     def update_gui(self):
         if timer >= 10:
@@ -118,14 +125,16 @@ class Ui_MainWindow(object):
             self.clockClock.setText(f"00 : {'0'+str(timer)}")
 
     def clock_guessing(self):
+        global clock_win
+
         guess = int(self.clockLine.text())  # 입력값 가져옴
         if guess > answer:
             msg = "더 낮은 숫자입니다"
         elif guess < answer:
             msg = "더 높은 숫자입니다"
         else:
+            clock_win = 1
             msg = "정답입니다!"
-            # self.mytimer.stop()
 
         self.clockSpeak.setText(msg)  # 메시지를 출력한다.
         self.clockLine.setText("")
@@ -134,17 +143,22 @@ class Ui_MainWindow(object):
     def clock_reset(self):
         global answer
         global timer
-        timer = 20
+        global clock_win
         answer = random.randint(1, 100)
+        timer = 20
+        clock_win = 0
         self.clockSpeak.setText("다시 도전해봅시다")
         self.clockLine.setText("")
-        self.myTimer.timeout.connect(self.timerTimeout)
-        self.myTimer.start()
+        self.myTimer.start(1000)
 
     # 뒤로가기 버튼
     def clock_back(self):
         global answer
+        global timer
+        global clock_win
         answer = random.randint(1, 100)
+        timer = 20
+        clock_win = 0
         self.clockSpeak.setText("1부터 100사이의 숫자를 맞춰보세요")
         self.clockLine.setText("")
 
@@ -432,7 +446,6 @@ class Ui_MainWindow(object):
         self.clockRetryBtn.setFont(font)
         self.clockRetryBtn.setObjectName("clockRetryBtn")
         self.clockRetryBtn.clicked.connect(self.clock_reset)  # 시도 버튼 클릭 시
-        self.clockModeBtn.clicked.connect(self.startTimer)  # 타이머 실행
 
         # 시간모드 타이머
         self.clockClock = QtWidgets.QLabel(self.clockMode)
