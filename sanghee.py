@@ -3,13 +3,16 @@ import random
 
 
 answer = random.randint(1, 100)  # 정답을 1에서 100 사이의 난수로 설정한다.
-count = 0
+count = 0  # 시도 횟수
+count_count = 10  # 제한 모드 남은 기회
+timer = 20  # 시간 모드 타이머
 
 
 class Ui_MainWindow(object):
 
+    # 기본모드 함수
     # 시도 버튼 - 추측 결과를 보여주는 함수
-    def guessing(self):
+    def basic_guessing(self):
         global count
         count += 1
         guess = int(self.basicLine.text())  # 입력값 가져옴
@@ -25,19 +28,125 @@ class Ui_MainWindow(object):
         self.basicLine.setText("")
 
     # 초기화 버튼 - 정답을 다시 설정
-    def reset(self):
+    def basic_reset(self):
         global answer
         global count
         answer = random.randint(1, 100)
         count = 0
         self.basicSpeak.setText("다시 도전해봅시다")
         self.basicTryCount.setText(f"시도 횟수: {count}")
-    # 힌트 버튼 - x-10 ~ x+10범위
 
-    def hint(self):
+    # 힌트 버튼 - x-10 ~ x+10범위
+    def basic_hint(self):
         global answer
         # 메시지를 출력한다.
         self.basicSpeak.setText(f"{answer-10} ~ {answer+10}사이의 값입니다.")
+
+    # 뒤로가기 버튼
+    def basic_back(self):
+        global answer
+        global count
+        answer = random.randint(1, 100)
+        count = 0
+        self.basicSpeak.setText("1부터 100사이의 숫자를 맞춰보세요")
+        self.basicTryCount.setText(f"시도 횟수: {count}")
+
+    # 제한모드 함수
+    # 시도 버튼 - 추측 결과를 보여주는 함수
+    def count_guessing(self):
+        global count_count
+        count_count -= 1
+        if count_count < 0:
+            return
+        guess = int(self.countLine.text())  # 입력값 가져옴
+        if guess > answer:
+            msg = "더 낮은 숫자입니다"
+        elif guess < answer:
+            msg = "더 높은 숫자입니다"
+        else:
+            msg = "정답입니다!"
+        self.countSpeak.setText(msg)  # 메시지를 출력한다.
+        self.countCount.setText(f"남은 기회 : {count_count}")
+        self.countLine.setText("")
+        if count_count == 0:
+            self.countSpeak.setText(
+                "숫자를 맞추지 못했습니다. \n재도전하고 싶으면\n'다시' 버튼을 눌러주세요")
+
+    # 초기화 버튼 - 정답을 다시 설정
+    def count_reset(self):
+        global count_count
+        global answer
+        count_count = 10
+        answer = random.randint(1, 100)
+        self.countSpeak.setText("다시 도전해봅시다")
+        self.countCount.setText(f"남은 기회 : {count_count}")
+        self.countLine.setText("")
+
+    # 뒤로가기 버튼
+    def count_back(self):
+        global answer
+        global count_count
+        answer = random.randint(1, 100)
+        count_count = 10
+        self.countSpeak.setText("1부터 100사이의 숫자를 맞춰보세요")
+        self.countCount.setText(f"남은 기회 : {count_count}")
+        self.countLine.setText("")
+
+    # 시간모드 함수
+    # 시도 버튼 - 추측 결과를 보여주는 함수
+    def startTimer(self):
+        global timer
+        # time_left_int = 60
+
+        self.myTimer.timeout.connect(self.timerTimeout)
+        self.myTimer.start(1000)
+
+    def timerTimeout(self):
+        global timer
+        timer -= 1
+        if timer >= 0:
+            self.update_gui()
+        else:
+            self.clockSpeak.setText(
+                "숫자를 맞추지 못했습니다. \n재도전하고 싶으면\n'다시' 버튼을 눌러주세요")
+            # self.mytimer.stop()
+
+    def update_gui(self):
+        if timer >= 10:
+            self.clockClock.setText(f"00 : {str(timer)}")
+        else:
+            self.clockClock.setText(f"00 : {'0'+str(timer)}")
+
+    def clock_guessing(self):
+        guess = int(self.clockLine.text())  # 입력값 가져옴
+        if guess > answer:
+            msg = "더 낮은 숫자입니다"
+        elif guess < answer:
+            msg = "더 높은 숫자입니다"
+        else:
+            msg = "정답입니다!"
+            # self.mytimer.stop()
+
+        self.clockSpeak.setText(msg)  # 메시지를 출력한다.
+        self.clockLine.setText("")
+
+    # 초기화 버튼 - 정답을 다시 설정
+    def clock_reset(self):
+        global answer
+        global timer
+        timer = 20
+        answer = random.randint(1, 100)
+        self.clockSpeak.setText("다시 도전해봅시다")
+        self.clockLine.setText("")
+        self.myTimer.timeout.connect(self.timerTimeout)
+        self.myTimer.start()
+
+    # 뒤로가기 버튼
+    def clock_back(self):
+        global answer
+        answer = random.randint(1, 100)
+        self.clockSpeak.setText("1부터 100사이의 숫자를 맞춰보세요")
+        self.clockLine.setText("")
 
     def setupUi(self, MainWindow):
 
@@ -104,8 +213,7 @@ class Ui_MainWindow(object):
         self.clockModeBtn.setObjectName("clockModeBtn")
         self.gridLayout.addWidget(self.clockModeBtn, 3, 0, 1, 1)
 
-        # 기본모드 화면
-        # 기본모드 제목 ??
+        # 분반 학번 이름
         self.mainTitle_2 = QtWidgets.QLabel(self.main)
         self.mainTitle_2.setGeometry(QtCore.QRect(780, 730, 211, 71))
         font = QtGui.QFont()
@@ -113,6 +221,8 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.mainTitle_2.setFont(font)
         self.mainTitle_2.setObjectName("mainTitle_2")
+
+        # 기본모드 화면
         # 기본모드 화면설정
         self.basicMode = QtWidgets.QWidget(self.centralwidget)
         self.basicMode.setGeometry(QtCore.QRect(0, 0, 1000, 800))
@@ -125,6 +235,8 @@ class Ui_MainWindow(object):
                                         "background-image: url(뒤로가기.png);")
         self.basicBackBtn.setText("")
         self.basicBackBtn.setObjectName("basicBackBtn")
+        self.basicBackBtn.clicked.connect(self.basic_back)  # 뒤로가기 버튼 클릭 시
+
         # 기본모드 제목
         self.basicTitle = QtWidgets.QLabel(self.basicMode)
         self.basicTitle.setGeometry(QtCore.QRect(450, 20, 111, 71))
@@ -159,7 +271,7 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.basicTryBtn.setFont(font)
         self.basicTryBtn.setObjectName("basicTryBtn")
-        self.basicTryBtn.clicked.connect(self.guessing)  # 시도 버튼 클릭 시
+        self.basicTryBtn.clicked.connect(self.basic_guessing)  # 시도 버튼 클릭 시
         # 기본모드 다시 버튼
         self.basicRetryBtn = QtWidgets.QPushButton(self.basicMode)
         self.basicRetryBtn.setGeometry(QtCore.QRect(580, 580, 81, 71))
@@ -168,7 +280,7 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.basicRetryBtn.setFont(font)
         self.basicRetryBtn.setObjectName("basicRetryBtn")
-        self.basicRetryBtn.clicked.connect(self.reset)  # 다시 버튼 클릭 시
+        self.basicRetryBtn.clicked.connect(self.basic_reset)  # 다시 버튼 클릭 시
 
         # 기본모드 힌트 버튼
         self.basicHintBtn = QtWidgets.QPushButton(self.basicMode)
@@ -178,7 +290,7 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.basicHintBtn.setFont(font)
         self.basicHintBtn.setObjectName("basicHintBtn")
-        self.basicHintBtn.clicked.connect(self.hint)  # 힌트 버튼 클릭 시
+        self.basicHintBtn.clicked.connect(self.basic_hint)  # 힌트 버튼 클릭 시
 
         # 기본모드 시도 횟수
         self.basicTryCount = QtWidgets.QLabel(self.basicMode)
@@ -190,16 +302,21 @@ class Ui_MainWindow(object):
         self.basicTryCount.setObjectName("basicTryCount")
 
         # 제한모드 화면
+        # 제한모드 화면설정
         self.countMode = QtWidgets.QWidget(self.centralwidget)
         self.countMode.setGeometry(QtCore.QRect(0, 0, 1000, 800))
         self.countMode.setStyleSheet("background-color: white")
         self.countMode.setObjectName("countMode")
+        # 제한모드 뒤로가기 버튼
         self.countBackBtn = QtWidgets.QPushButton(self.countMode)
         self.countBackBtn.setGeometry(QtCore.QRect(20, 20, 61, 61))
         self.countBackBtn.setStyleSheet("\n"
                                         "background-image: url(뒤로가기.png);")
         self.countBackBtn.setText("")
         self.countBackBtn.setObjectName("countBackBtn")
+        self.countBackBtn.clicked.connect(self.count_back)  # 뒤로가기 버튼 클릭 시
+
+        # 제한모드 제목
         self.countTitle = QtWidgets.QLabel(self.countMode)
         self.countTitle.setGeometry(QtCore.QRect(450, 20, 131, 71))
         font = QtGui.QFont()
@@ -207,11 +324,13 @@ class Ui_MainWindow(object):
         font.setPointSize(40)
         self.countTitle.setFont(font)
         self.countTitle.setObjectName("countTitle")
+        # 제한모드 사진
         self.countImage = QtWidgets.QLabel(self.countMode)
         self.countImage.setGeometry(QtCore.QRect(130, 150, 341, 421))
         self.countImage.setStyleSheet("image: url(교수.png);")
         self.countImage.setText("")
         self.countImage.setObjectName("countImage")
+        # 제한모드 진행 상황 설명글
         self.countSpeak = QtWidgets.QLabel(self.countMode)
         self.countSpeak.setGeometry(QtCore.QRect(540, 220, 321, 191))
         font = QtGui.QFont()
@@ -219,9 +338,11 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.countSpeak.setFont(font)
         self.countSpeak.setObjectName("countSpeak")
+        # 제한모드 입력란
         self.countLine = QtWidgets.QLineEdit(self.countMode)
         self.countLine.setGeometry(QtCore.QRect(280, 580, 281, 71))
         self.countLine.setObjectName("countLine")
+        # 제한모드 시도 버튼
         self.countTryBtn = QtWidgets.QPushButton(self.countMode)
         self.countTryBtn.setGeometry(QtCore.QRect(570, 580, 81, 71))
         font = QtGui.QFont()
@@ -229,6 +350,9 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.countTryBtn.setFont(font)
         self.countTryBtn.setObjectName("countTryBtn")
+        self.countTryBtn.clicked.connect(self.count_guessing)  # 시도 버튼 클릭 시
+
+        # 제한모드 다시 버튼
         self.countRetryBtn = QtWidgets.QPushButton(self.countMode)
         self.countRetryBtn.setGeometry(QtCore.QRect(660, 580, 81, 71))
         font = QtGui.QFont()
@@ -236,6 +360,9 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.countRetryBtn.setFont(font)
         self.countRetryBtn.setObjectName("countRetryBtn")
+        self.countRetryBtn.clicked.connect(self.count_reset)  # 다시 버튼 클릭 시
+
+        # 제한모드 카운트
         self.countCount = QtWidgets.QLabel(self.countMode)
         self.countCount.setGeometry(QtCore.QRect(390, 90, 281, 91))
         font = QtGui.QFont()
@@ -243,18 +370,24 @@ class Ui_MainWindow(object):
         font.setPointSize(50)
         self.countCount.setFont(font)
         self.countCount.setObjectName("countCount")
+        MainWindow.setCentralWidget(self.centralwidget)
 
         # 시간모드 화면
+        # 시간모드 화면설정
         self.clockMode = QtWidgets.QWidget(self.centralwidget)
         self.clockMode.setGeometry(QtCore.QRect(0, 0, 1000, 800))
         self.clockMode.setStyleSheet("background-color: white")
         self.clockMode.setObjectName("clockMode")
+        # 시간모드 뒤로가기 버튼
         self.clockBackBtn = QtWidgets.QPushButton(self.clockMode)
         self.clockBackBtn.setGeometry(QtCore.QRect(20, 20, 61, 61))
         self.clockBackBtn.setStyleSheet("\n"
                                         "background-image: url(뒤로가기.png);")
         self.clockBackBtn.setText("")
         self.clockBackBtn.setObjectName("clockBackBtn")
+        self.clockBackBtn.clicked.connect(self.clock_back)  # 뒤로가기 버튼 클릭 시
+
+        # 시간모드 제목
         self.clockTitle = QtWidgets.QLabel(self.clockMode)
         self.clockTitle.setGeometry(QtCore.QRect(450, 20, 111, 71))
         font = QtGui.QFont()
@@ -262,11 +395,13 @@ class Ui_MainWindow(object):
         font.setPointSize(40)
         self.clockTitle.setFont(font)
         self.clockTitle.setObjectName("clockTitle")
+        # 시간모드 사진
         self.clockImage = QtWidgets.QLabel(self.clockMode)
         self.clockImage.setGeometry(QtCore.QRect(130, 150, 341, 421))
         self.clockImage.setStyleSheet("image: url(교수.png);")
         self.clockImage.setText("")
         self.clockImage.setObjectName("clockImage")
+        # 시간모드 진행 상황 설명글
         self.clockSpeak = QtWidgets.QLabel(self.clockMode)
         self.clockSpeak.setGeometry(QtCore.QRect(540, 220, 321, 191))
         font = QtGui.QFont()
@@ -274,9 +409,11 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.clockSpeak.setFont(font)
         self.clockSpeak.setObjectName("clockSpeak")
+        # 시간모드 입력란
         self.clockLine = QtWidgets.QLineEdit(self.clockMode)
         self.clockLine.setGeometry(QtCore.QRect(280, 580, 281, 71))
         self.clockLine.setObjectName("clockLine")
+        # 시간모드 시도 버튼
         self.clockTryBtn = QtWidgets.QPushButton(self.clockMode)
         self.clockTryBtn.setGeometry(QtCore.QRect(570, 580, 81, 71))
         font = QtGui.QFont()
@@ -284,6 +421,9 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.clockTryBtn.setFont(font)
         self.clockTryBtn.setObjectName("clockTryBtn")
+        self.clockTryBtn.clicked.connect(self.clock_guessing)  # 시도 버튼 클릭 시
+
+        # 시간모드 다시 버튼
         self.clockRetryBtn = QtWidgets.QPushButton(self.clockMode)
         self.clockRetryBtn.setGeometry(QtCore.QRect(660, 580, 81, 71))
         font = QtGui.QFont()
@@ -291,6 +431,10 @@ class Ui_MainWindow(object):
         font.setPointSize(25)
         self.clockRetryBtn.setFont(font)
         self.clockRetryBtn.setObjectName("clockRetryBtn")
+        self.clockRetryBtn.clicked.connect(self.clock_reset)  # 시도 버튼 클릭 시
+        self.clockModeBtn.clicked.connect(self.startTimer)  # 타이머 실행
+
+        # 시간모드 타이머
         self.clockClock = QtWidgets.QLabel(self.clockMode)
         self.clockClock.setGeometry(QtCore.QRect(430, 100, 161, 91))
         font = QtGui.QFont()
@@ -298,7 +442,7 @@ class Ui_MainWindow(object):
         font.setPointSize(60)
         self.clockClock.setFont(font)
         self.clockClock.setObjectName("clockClock")
-        MainWindow.setCentralWidget(self.centralwidget)
+        self.myTimer = QtCore.QTimer(self.clockMode)
 
         # retranslateUi 호출
         self.retranslateUi(MainWindow)
@@ -328,6 +472,7 @@ class Ui_MainWindow(object):
         self.clockModeBtn.clicked.connect(self.main.hide)  # 메인 화면 가림
         self.clockModeBtn.clicked.connect(self.countMode.hide)  # 제한모드 화면 가림
         self.clockModeBtn.clicked.connect(self.basicMode.hide)  # 기본모드 화면 가림
+        self.clockModeBtn.clicked.connect(self.startTimer)  # 타이머 실행
 
         # 시간모드 뒤로가기 버튼 눌렀을 때
         self.clockBackBtn.clicked.connect(self.clockMode.hide)  # 시간모드 화면 가림
